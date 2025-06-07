@@ -64,13 +64,17 @@ Los principios de diseño y conceptos específicos de RISC-V discutidos en este 
 
 \section{Arquitectura del Sistema}
 \label{sec:system_architecture}
-\subsection{Camino de Datos General y Modulo Datapath}
-El camino de datos esta ahora abstraído en el modulo \texttt{datapath.sv}, que integra los modulos esenciales: Program Counter (PC), Memoria de Instrucciones, Banco de Registros, Unidad de Extension de Signo, ALU y Memoria de Datos. El datapath recibe todas las senales de control desde la unidad de control externa y ejecuta la instruccion correspondiente en un solo ciclo.
+% =====================
+% Sección: Camino de Datos General y Módulo Datapath
+% =====================
 
-La logica de seleccion de operandos para la ALU y la actualizacion del PC ahora depende de senales externas como \texttt{jal\_active} y \texttt{jalr\_active}, permitiendo un control claro y modular de los saltos y flujos de ejecucion.
+\subsection{Camino de Datos General y Módulo Datapath}
+El camino de datos está abstraído en el módulo \texttt{datapath.sv}, que integra los módulos esenciales: Program Counter (PC), Memoria de Instrucciones, Banco de Registros, Unidad de Extensión de Signo, ALU y Memoria de Datos. El datapath recibe todas las señales de control desde la unidad de control externa y ejecuta la instrucción correspondiente en un solo ciclo.
 
-\textbf{Seleccion de operandos para saltos:}
-\begin{lstlisting}[language=Verilog, caption={Seleccion de operandos en datapath.sv}]
+La lógica de selección de operandos para la ALU y la actualización del PC depende de señales externas como \texttt{jal\_active} y \texttt{jalr\_active}, permitiendo un control claro y modular de los saltos y flujos de ejecución.
+
+\textbf{Selección de operandos para saltos:}
+\begin{lstlisting}[language=Verilog, caption={Selección de operandos en datapath.sv}]
 always_comb begin
     if (jal_active && !jalr_active) begin
         alu_input_a = pc_current_val;
@@ -85,20 +89,20 @@ always_comb begin
 end
 \end{lstlisting}
 
-El resultado de la ALU se utiliza para actualizar el PC en instrucciones de salto, asegurando la correcta ejecucion de JAL y JALR.
+El resultado de la ALU se utiliza para actualizar el PC en instrucciones de salto, asegurando la correcta ejecución de JAL y JALR.
 
 \begin{figure*}[!t]
     \centering
     \begin{tikzpicture}[
-        node distance=1cm and 1.5cm,
+        node distance=2cm and 2.5cm, % Aumenta la distancia entre nodos
         block/.style={
             rectangle, 
             draw, 
             fill=blue!10, 
-            text width=1.6cm, 
+            text width=1.7cm, 
             text centered, 
             rounded corners, 
-            minimum height=0.9cm,
+            minimum height=1.1cm,
             font=\footnotesize,
             inner sep=2pt
         },
@@ -108,183 +112,79 @@ El resultado de la ALU se utiliza para actualizar el PC en instrucciones de salt
             trapezium right angle=-70, 
             draw, 
             fill=green!10, 
-            minimum width=0.7cm, 
-            minimum height=0.6cm, 
+            minimum width=1cm, 
+            minimum height=0.8cm, 
             inner sep=1pt, 
             shape border rotate=90, 
             trapezium stretches=true,
             font=\tiny
         },
+        alu/.style={
+            rectangle, 
+            draw, 
+            fill=yellow!20, 
+            minimum width=1.5cm, 
+            minimum height=1cm, 
+            text centered, 
+            font=\footnotesize
+        },
         control/.style={
             rectangle, 
             draw, 
             fill=red!10, 
-            text width=1.5cm, 
+            minimum width=1.7cm, 
+            minimum height=1cm, 
             text centered, 
-            rounded corners, 
-            minimum height=0.8cm,
-            font=\footnotesize,
-            inner sep=1pt
-        },
-        alu/.style={
-            rectangle, 
-            draw, 
-            fill=orange!10, 
-            text width=1.1cm, 
-            text centered, 
-            minimum height=0.9cm,
-            font=\footnotesize,
-            inner sep=1pt
-        },
-        line/.style={
-            draw, 
-            -latex',
-            >=stealth,
-            line width=0.6pt
+            font=\footnotesize
         },
         dashedline/.style={
-            draw, 
-            -latex', 
-            dashed, 
-            red!70,
-            >=stealth,
-            line width=0.6pt
+            red, dashed, thick
         },
-        datalabel/.style={
-            font=\tiny, 
-            near start, 
-            sloped, 
-            above,
-            text=black
-        },
-        scale=0.6,
-        transform shape,
-        every node/.style={transform shape}
+        line/.style={
+            -{Latex[length=2mm]}, thick
+        }
     ]
-    
-    % === Nodos principales - Primera Fila (Arriba) ===
-    % Unidad de control
+    % === Nodos principales ===
     \node [control] (control) {Control\\Unit};
-    
-    % === Segunda Fila ===
-    % PC
-    \node [block, below=2.5cm of control] (pc) {PC};
-    
-    % MUX del PC
-    \node [mux, right=1.5cm of pc] (mux_pc) {MUX};
-    
-    % Sumador +4
-    \node [draw, circle, fill=gray!20, right=0.8cm of mux_pc, minimum size=0.5cm] (add4) {+4};
-    
-    % Memoria de instrucciones
-    \node [block, right=1.5cm of add4, text width=1.4cm] (instmem) {Inst\\Memory};
-    
-    % === Tercera Fila ===
-    % Extensor de signo
-    \node [block, below=1.5cm of instmem, xshift=-2cm, text width=1.3cm] (signext) {Sign\\Ext};
-    
-    % Sumador de branch
-    \node [draw, circle, fill=gray!20, below=1.5cm of add4, minimum size=0.5cm] (add_branch) {+};
-    
-    % === Cuarta Fila ===
-    % Banco de registros
-    \node [block, below=1.5cm of signext, text width=1.4cm] (regfile) {Reg\\File};
-    
-    % MUX ALU B
-    \node [mux, right=1.5cm of regfile] (mux_alu_b) {MUX};
-    
-    % ALU
-    \node [alu, right=1.5cm of mux_alu_b] (alu) {ALU};
-    
-    % MUX Write Back
-    \node [mux, right=1.5cm of alu] (mux_wb) {MUX};
-    
-    % Memoria de datos
-    \node [block, right=1.5cm of mux_wb, text width=1.4cm] (datamem) {Data\\Mem};
-    
+    \node [block, below=3.5cm of control] (pc) {PC};
+    \node [mux, right=2.5cm of pc] (mux_pc) {MUX};
+    \node [draw, circle, fill=gray!20, right=1.5cm of mux_pc, minimum size=0.9cm] (add4) {+4};
+    \node [block, right=2.5cm of add4, text width=1.7cm] (instmem) {Inst\\Memory};
+    \node [block, below=2.5cm of instmem, xshift=-3cm, text width=1.5cm] (signext) {Sign\\Ext};
+    \node [draw, circle, fill=gray!20, below=2.5cm of add4, minimum size=0.9cm] (add_branch) {+};
+    \node [block, below=2.5cm of signext, text width=1.7cm] (regfile) {Reg\\File};
+    \node [mux, right=2.5cm of regfile] (mux_alu_b) {MUX};
+    \node [alu, right=2.5cm of mux_alu_b] (alu) {ALU};
+    \node [mux, right=2.5cm of alu] (mux_wb) {MUX};
+    \node [block, right=2.5cm of mux_wb, text width=1.7cm] (datamem) {Data\\Mem};
     % === Conexiones principales ===
-    % PC -> MUX PC
     \draw [line] (pc.east) -- (mux_pc.west);
-    
-    % MUX PC -> InstMem
     \draw [line] (mux_pc.east) -- (add4.west);
     \draw [line] (add4.east) -- (instmem.west);
-    
-    % PC -> +4 (conexión directa al sumador +4)
-    \draw [line] (pc.east) -- ++(0.5,0) |- (add4.west);
-    
-    % +4 -> MUX PC (PC+4)
-    \draw [line] (add4.east) ++(0.2,0) |- (mux_pc.north) node[above left, font=\tiny, pos=0.75] {PC+4};
-    
+    \draw [line] (pc.east) -- ++(0.7,0) |- (add4.west);
+    \draw [line] (add4.east) ++(0.3,0) |- (mux_pc.north) node[above left, font=\tiny, pos=0.75] {PC+4};
     % === Tercera fila de conexiones ===
-    % InstMem -> Banco de registros
-    \draw [line] (instmem.south) -- ++(0,-0.8) -| (signext.north) 
-        node[pos=0.25, above, font=\tiny] {Instruction};
-    
-    % InstMem -> Extensor de signo (ya conectado arriba)
-    
-    % InstMem -> Unidad de control
-    \draw [line] (instmem.west) -- ++(-0.5,0) |- (control.east);
-    
-    % Extensor -> Sumador branch
+    \draw [line] (instmem.south) -- ++(0,-1.2) -| (signext.north) node[pos=0.25, above, font=\tiny] {Instruction};
+    \draw [line] (instmem.west) -- ++(-0.7,0) |- (control.east);
     \draw [line] (signext.south) -- (add_branch.north);
-    
-    % +4 -> Sumador branch (conexión desde add4)
-    \draw [line] (add4.south) -- ++(0,-0.5) -| (add_branch.north);
-    
-    % Sumador branch -> MUX PC (Branch Target)
+    \draw [line] (add4.south) -- ++(0,-0.8) -| (add_branch.north);
     \draw [line] (add_branch.west) -| (mux_pc.south) node[below left, font=\tiny] {Branch};
-    
     % === Cuarta fila de conexiones ===
-    % Banco de registros -> MUX ALU B
-    \draw [line] (regfile.east) -- ++(0.3,0) |- (mux_alu_b.west);
-    
-    % Banco de registros -> ALU
-    \draw [line] (regfile.east) ++(0.3,0) |- (alu.south west);
-    
-    % Extensor de signo -> MUX ALU B
-    \draw [line] (signext.south) -- ++(0,-0.8) -| (mux_alu_b.south);
-    
-    % MUX ALU B -> ALU
+    \draw [line] (regfile.east) -- ++(0.5,0) |- (mux_alu_b.west);
+    \draw [line] (regfile.east) ++(0.5,0) |- (alu.south west);
+    \draw [line] (signext.south) -- ++(0,-1.2) -| (mux_alu_b.south);
     \draw [line] (mux_alu_b.east) -- (alu.west);
-    
-    % ALU -> MUX WB
     \draw [line] (alu.east) -- (mux_wb.west);
-    
-    % MUX WB -> Memoria de datos
     \draw [line] (mux_wb.east) -- (datamem.west);
-    
-    % Memoria de datos -> Banco de registros (Write Back)
-    \draw [line] (datamem.south) -- ++(0,-0.5) -| (regfile.south east);
-    
-    % +4 -> MUX WB (para jal)
-    \draw [line] (add4.south) ++(0.2,0) -- ++(0,-3.5) -| (mux_wb.north);
-    
+    \draw [line] (datamem.south) -- ++(0,-0.8) -| (regfile.south east);
+    \draw [line] (add4.south) ++(0.3,0) -- ++(0,-5) -| (mux_wb.north);
     % === Señales de control ===
-    % Unidad de control -> MUX PC
-    \draw [dashedline] (control.south) -- ++(0,-0.5) -| (mux_pc.north) 
-        node[above right, font=\tiny, pos=0.25] {PC Src};
-    
-    % Unidad de control -> Banco de registros
-    \draw [dashedline] (control.south) -- ++(0,-1) -| (regfile.north) 
-        node[above right, font=\tiny, pos=0.3] {RegWrite};
-    
-    % Unidad de control -> ALU
-    \draw [dashedline] (control.south) -- ++(0,-1.5) -| (alu.north) 
-        node[above right, font=\tiny, pos=0.4] {ALUOp};
-    
-    % Unidad de control -> MUX ALU B
-    \draw [dashedline] (control.south) -- ++(0,-2) -| (mux_alu_b.north) 
-        node[above right, font=\tiny, pos=0.45] {ALUSrc};
-    
-    % Unidad de control -> Memoria de datos
-    \draw [dashedline] (control.south) -- ++(0,-2.5) -| (datamem.north) 
-        node[above right, font=\tiny, pos=0.5] {MemW/Read};
-    
-    % Unidad de control -> MUX WB
-    \draw [dashedline] (control.south) -- ++(0,-3) -| (mux_wb.north) 
-        node[above right, font=\tiny, pos=0.55] {MemtoReg};
-    
+    \draw [dashedline] (control.south) -- ++(0,-0.8) -| (mux_pc.north) node[above right, font=\tiny, pos=0.25] {PC Src};
+    \draw [dashedline] (control.south) -- ++(0,-1.5) -| (regfile.north) node[above right, font=\tiny, pos=0.3] {RegWrite};
+    \draw [dashedline] (control.south) -- ++(0,-2.2) -| (alu.north) node[above right, font=\tiny, pos=0.4] {ALUOp};
+    \draw [dashedline] (control.south) -- ++(0,-2.9) -| (mux_alu_b.north) node[above right, font=\tiny, pos=0.45] {ALUSrc};
+    \draw [dashedline] (control.south) -- ++(0,-3.6) -| (datamem.north) node[above right, font=\tiny, pos=0.5] {MemW/Read};
+    \draw [dashedline] (control.south) -- ++(0,-4.3) -| (mux_wb.north) node[above right, font=\tiny, pos=0.55] {MemtoReg};
     % === Etiquetas ===
     \node[above=0.3cm of control, font=\small\bfseries] {Señales de Control};
     \node[below=0.3cm of datamem, font=\small\bfseries] {Ciclo de Escritura};
