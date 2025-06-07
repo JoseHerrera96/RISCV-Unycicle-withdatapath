@@ -1,0 +1,82 @@
+$date
+	Tue Apr 22 20:01:26 2025
+$end
+$version
+	Icarus Verilog
+$end
+$timescale
+	1ps
+$end
+$scope module RISCVALU_tb $end
+$var wire 1 ! zero $end
+$var wire 32 " ALUout [31:0] $end
+$var reg 32 # A [31:0] $end
+$var reg 4 $ ALUctl [3:0] $end
+$var reg 32 % B [31:0] $end
+$scope module dut $end
+$var wire 32 & A [31:0] $end
+$var wire 4 ' ALUctl [3:0] $end
+$var wire 32 ( B [31:0] $end
+$var reg 32 ) ALUout [31:0] $end
+$var reg 1 ! zero $end
+$upscope $end
+$upscope $end
+$enddefinitions $end
+$comment Show the parameter values. $end
+$dumpall
+$end
+#0
+$dumpvars
+b1010 )
+b1010 (
+b0 '
+b1111 &
+b1010 %
+b0 $
+b1111 #
+b1010 "
+0!
+$end
+#10000
+b1 $
+b1 '
+b0 #
+b0 &
+#20000
+b10 $
+b10 '
+b1 %
+b1 (
+b1001 #
+b1001 &
+#30000
+b110 "
+b110 )
+b110 $
+b110 '
+b10 %
+b10 (
+b1000 #
+b1000 &
+#40000
+b1 "
+b1 )
+b111 $
+b111 '
+b1001 %
+b1001 (
+#50000
+b0 "
+b0 )
+b1010 #
+b1010 &
+#60000
+b11111111111111111111111111110101 "
+b11111111111111111111111111110101 )
+b1100 $
+b1100 '
+b1010 %
+b1010 (
+b0 #
+b0 &
+#70000
